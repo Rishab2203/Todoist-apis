@@ -7,7 +7,10 @@ const {
   getAll,
   findById,
   projectIdByName,
+  findByFilters,
 } = require("../models/model.js");
+
+const { createRequestFilters } = require("../../utils.js");
 
 const insertNewProject = (req, res) => {
   const body = req.body;
@@ -134,6 +137,28 @@ const findProjectOrTaskById = (req, res) => {
   });
 };
 
+const getTasksByFilters = (req, res) => {
+  let queries = req.query;
+  let pageNum = req.query.page ? req.query.page : 1;
+  let filters = createRequestFilters(queries);
+  findByFilters(filters, (err, result) => {
+    if (err) {
+      res.status(500).json({ message: "Error finidng tasks" });
+      console.log("error getting tasks by filters", err.message);
+      return;
+    }
+    if (!result) {
+      res.status(200).json({ message: "No such tasks found" });
+      return;
+    }
+    if (result.length > 10 && !pageNum) {
+      res.status(200).json(result.slice(0, 10));
+      return;
+    }
+    res.status(200).json(result.slice(10 * pageNum - 10, 10 * pageNum));
+  });
+};
+
 module.exports = {
   insertNewtask,
   insertNewProject,
@@ -143,4 +168,5 @@ module.exports = {
   upDateProject,
   updateTask,
   findProjectOrTaskById,
+  getTasksByFilters,
 };
