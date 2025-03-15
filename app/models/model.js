@@ -1,9 +1,13 @@
 const db = require("../db-config/db.js");
 
-const getAll = (tableName, cb) => {
-  db.all(`SELECT * FROM ${tableName} `, [], (err, rows) => {
-    cb(err, rows);
-  });
+const getAll = (tableName, offset = 0, cb) => {
+  db.all(
+    `SELECT * FROM ${tableName} LIMIT 10 OFFSET ? ;`,
+    [offset],
+    (err, rows) => {
+      cb(err, rows);
+    }
+  );
 };
 
 const insertProject = ({ name, color = "NULL", favourite = 0 }, cb) => {
@@ -97,12 +101,50 @@ const upDateTasksByID = (
   );
 };
 
-const findByFilters = (filters, cb) => {
-  let query = `SELECT * FROM tasks WHERE ${filters} ;`;
-  console.log("query", query);
-  db.all(`SELECT * FROM tasks WHERE ${filters} ;`, [], (err, result) => {
-    cb(err, result);
+const findByFilters = (filters, offset, cb) => {
+  console.log(
+    `SELECT * FROM tasks WHERE ${filters} LIMIT 10 OFFSET ${offset} ;`
+  );
+  db.all(
+    `SELECT * FROM tasks WHERE ${filters} LIMIT 10 OFFSET ? ;`,
+    [offset],
+    (err, result) => {
+      cb(err, result);
+    }
+  );
+};
+
+function updateField(field, id, cb) {
+  db.run(`UPDATE projects SET ${field} WHERE id = ? ;`, [id], (err) => {
+    cb(err);
   });
+}
+
+function insertComment(
+  { project_id, task_id = "NULL", content, posted_at = getCurrentDate() },
+  cb
+) {
+  db.run(
+    `INSERT INTO comments(project_id,task_id,content,posted_at) VALUES (?,?,?,?) ;`,
+    [project_id, task_id, content, posted_at],
+    (err) => {
+      cb(err);
+    }
+  );
+}
+
+const upDateComments = (
+  id,
+  { project_id, task_id = "NULL", content, posted_at = getCurrentDate() },
+  cb
+) => {
+  db.run(
+    "UPDATE comments SET project_id = ? , task_id = ?, content = ? , posted_at = ? WHERE id = ?",
+    [project_id, task_id, content, posted_at, id],
+    (err) => {
+      cb(err);
+    }
+  );
 };
 
 function getCurrentDate() {
@@ -126,4 +168,7 @@ module.exports = {
   projectIdByName,
   getCurrentDate,
   findByFilters,
+  updateField,
+  insertComment,
+  upDateComments,
 };
