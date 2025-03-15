@@ -97,6 +97,14 @@ const upDateTasksByID = (
   );
 };
 
+const findByFilters = (filters, cb) => {
+  let query = `SELECT * FROM tasks WHERE ${filters} ;`;
+  console.log("query", query);
+  db.all(`SELECT * FROM tasks WHERE ${filters} ;`, [], (err, result) => {
+    cb(err, result);
+  });
+};
+
 function getCurrentDate() {
   const today = new Date();
   const day = String(today.getDate()).padStart(2, "0");
@@ -117,4 +125,5 @@ module.exports = {
   findById,
   projectIdByName,
   getCurrentDate,
+  findByFilters,
 };
