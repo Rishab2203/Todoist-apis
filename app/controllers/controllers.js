@@ -1,174 +1,239 @@
-const db = require("../db-config/db.js");
-
-const getAll = (tableName, offset = 0, cb) => {
-  db.all(
-    `SELECT * FROM ${tableName} LIMIT 10 OFFSET ? ;`,
-    [offset],
-    (err, rows) => {
-      cb(err, rows);
-    }
-  );
-};
-
-const insertProject = ({ name, color = "NULL", favourite = 0 }, cb) => {
-  db.run(
-    "INSERT INTO projects (name ,color,favourite) VALUES(?,?,?)",
-    [name, color, favourite],
-    (err) => {
-      cb(err);
-    }
-  );
-};
-
-const projectIdByName = (projectName) => {
-  return new Promise((resolve, reject) => {
-    db.get(
-      "select id from projects where name= ? ",
-      [projectName],
-      (err, row) => {
-        if (err) {
-          console.log("error getting project Id by name", err.message);
-          reject();
-        }
-        //   console.log(row, row.id);
-        resolve(row.id);
-      }
-    );
-  });
-};
-
-const insertTask = (
-  {
-    content,
-    description = "NULL",
-    project_id,
-    created = getCurrentDate(),
-    completed = 0,
-    due_date = "NULL",
-  },
-  cb
-) => {
-  db.run(
-    "INSERT INTO tasks (content, description,project_id, created,completed,due_date) VALUES(?,?,?,?,?,?)",
-    [content, description, project_id, created, completed, due_date],
-    (err) => {
-      cb(err);
-    }
-  );
-};
-
-const findById = (tableName, id, cb) => {
-  db.get(`SELECT * FROM ${tableName} WHERE id = ? `, id, (err, result) => {
-    cb(err, result);
-  });
-};
-
-const deleteById = (tableName, id, cb) => {
-  db.run(`DELETE FROM ${tableName}  WHERE id = ?`, id, (err) => {
-    cb(err);
-  });
-};
-
-const upDateProjectByID = (id, { name, color = "NULL", favourite = 0 }, cb) => {
-  console.log(id);
-  db.run(
-    "UPDATE projects SET name = ? , color = ?, favourite = ?  WHERE id = ?",
-    [name, color, favourite, id],
-    (err) => {
-      cb(err);
-    }
-  );
-};
-
-const upDateTasksByID = (
-  id,
-  {
-    content,
-    description = "NULL",
-    project_id,
-    created = getCurrentDate(),
-    completed = 0,
-    due_date = "NULL",
-  },
-  cb
-) => {
-  db.run(
-    "UPDATE tasks SET content = ? , description = ?, project_id = ? , created = ?, completed= ?, due_date = ? WHERE id = ?",
-    [content, description, project_id, created, completed, due_date, id],
-    (err) => {
-      cb(err);
-    }
-  );
-};
-
-const findByFilters = (filters, offset, cb) => {
-  console.log(
-    `SELECT * FROM tasks WHERE ${filters} LIMIT 10 OFFSET ${offset} ;`
-  );
-  db.all(
-    `SELECT * FROM tasks WHERE ${filters} LIMIT 10 OFFSET ? ;`,
-    [offset],
-    (err, result) => {
-      cb(err, result);
-    }
-  );
-};
-
-function updateField(field, id, cb) {
-  db.run(`UPDATE projects SET ${field} WHERE id = ? ;`, [id], (err) => {
-    cb(err);
-  });
-}
-
-function insertComment(
-  { project_id, task_id = "NULL", content, posted_at = getCurrentDate() },
-  cb
-) {
-  db.run(
-    `INSERT INTO comments(project_id,task_id,content,posted_at) VALUES (?,?,?,?) ;`,
-    [project_id, task_id, content, posted_at],
-    (err) => {
-      cb(err);
-    }
-  );
-}
-
-const upDateComments = (
-  id,
-  { project_id, task_id = "NULL", content, posted_at = getCurrentDate() },
-  cb
-) => {
-  db.run(
-    "UPDATE comments SET project_id = ? , task_id = ?, content = ? , posted_at = ? WHERE id = ?",
-    [project_id, task_id, content, posted_at, id],
-    (err) => {
-      cb(err);
-    }
-  );
-};
-
-function getCurrentDate() {
-  const today = new Date();
-  const day = String(today.getDate()).padStart(2, "0");
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const year = today.getFullYear();
-  const formattedDate = `${day}/${month}/${year}`;
-  return formattedDate;
-}
-
-module.exports = {
+const {
   upDateProjectByID,
   upDateTasksByID,
   insertTask,
   insertProject,
   deleteById,
-  deleteById,
   getAll,
   findById,
   projectIdByName,
-  getCurrentDate,
   findByFilters,
   updateField,
   insertComment,
   upDateComments,
+} = require("../models/model.js");
+
+const { createRequestFilters } = require("../../utils.js");
+
+const insertNewProject = (req, res) => {
+  const body = req.body;
+  if (!body["name"] || body["name"] == "") {
+    res.status(404).json({ message: "Invalid project Name" });
+    return;
+  }
+
+  insertProject(req.body, (err) => {
+    if (err) {
+      res.status(500).json({ message: "Error inserting Project" });
+      console.log("Error inserting project", err.message);
+      return;
+    }
+    res.status(200).json({ message: "Project successfully added" });
+  });
+};
+
+const insertNewtask = async (req, res) => {
+  const body = req.body;
+  const projectId = await projectIdByName(body.project_name);
+  body.project_id = projectId;
+
+  if (!body["content"] || body["content"] == "" || !body["project_id"]) {
+    res.status(404).json({ message: "Invalid details" });
+    return;
+  }
+
+  insertTask(req.body, (err) => {
+    if (err) {
+      res.status(500).json({ message: "Error inserting Project" });
+      console.log("Error inserting project", err.message);
+      return;
+    }
+    res.status(200).json({ message: "Project successfully added" });
+  });
+};
+
+const getAllProjects = (req, offset, res) => {
+  let offset = req.queries.page ? (req.query.page - 1) * 10 : 0;
+  getAll("projects", offset, (err, result) => {
+    if (err) {
+      res.status(400).json({ message: `Error fetching projects` });
+      console.log(`error fetchiing projects`, err.message);
+      return;
+    }
+    if (!result) {
+      res.status(200).json({ message: "No Projects in Database" });
+      return;
+    }
+    res.status(200).json(result);
+  });
+};
+
+const getAllTasks = (req, res) => {
+  let offset = req.queries.page ? (req.query.page - 1) * 10 : 0;
+  getAll("tasks", offset, (err, result) => {
+    if (err) {
+      res.status(400).json({ message: `Error fetching tasks` });
+      console.log(`error fetchiing tasks `, err.message);
+      return;
+    }
+    if (!result) {
+      res.status(200).json({ message: "No Tasks in Database" });
+      return;
+    }
+    res.status(200).json(result);
+  });
+};
+
+const getAllComments = (req, res) => {
+  let offset = req.queries.page ? (req.query.page - 1) * 10 : 0;
+  getAll("comments", offset, (err, result) => {
+    if (err) {
+      res.status(400).json({ message: `Error fetching comments` });
+      console.log(`error fetchiing comments `, err.message);
+      return;
+    }
+    if (!result) {
+      res.status(200).json({ message: "No comments in Database" });
+      return;
+    }
+    res.status(200).json(result);
+  });
+};
+
+const deleteProjectOrTaskOrCommentById = (req, res) => {
+  let id = parseInt(req.params.id);
+  const table = req.baseUrl.slice(1);
+
+  deleteById(table, id, (err) => {
+    if (err) {
+      res.status(500).json({ message: "Error deleting" });
+      console.log("error deleting : ", err.message);
+    }
+    res.status(200).json({ message: "successfully deleted." });
+  });
+};
+
+const upDateProject = (req, res) => {
+  let id = parseInt(req.params.id);
+
+  upDateProjectByID(id, req.body, (err) => {
+    if (err) {
+      res.status(500).json({ message: `Error updating project id ${id}` });
+      console.log(`Error updating project id ${id}`, err.message);
+      return;
+    }
+    res.status(200).json({ message: `project ${id} successfully updated` });
+  });
+};
+
+const updateTask = (req, res) => {
+  let id = parseInt(req.params.id);
+  upDateTasksByID(id, req.body, (err) => {
+    if (err) {
+      res.status(500).json({ message: `Error updating task id ${id}` });
+      console.log(`Error updating task id ${id}`, err.message);
+      return;
+    }
+    res.status(200).json({ message: `Task ${id} successfully updated` });
+  });
+};
+
+const findProjectOrTaskOrCommentById = (req, res) => {
+  const table = req.baseUrl.slice(1);
+  let id = parseInt(req.params.id);
+
+  findById(table, id, (err, result) => {
+    if (err) {
+      res
+        .status(500)
+        .json({ message: `Error getting data for ${table} id ${id}` });
+      console.log(`Error updating ${table} id ${id}`, err.message);
+      return;
+    }
+    if (!result) {
+      res.status(200).json({ message: `No ${table} in Database for id ${id}` });
+      return;
+    }
+    res.status(200).json(result);
+  });
+};
+
+const getTasksByFilters = (req, res) => {
+  let queries = req.query;
+  let pageNum = req.query.page ? req.query.page : 1;
+  let filters = createRequestFilters(queries);
+  findByFilters(filters, (err, result) => {
+    if (err) {
+      res.status(500).json({ message: "Error finidng tasks" });
+      console.log("error getting tasks by filters", err.message);
+      return;
+    }
+    if (!result) {
+      res.status(200).json({ message: "No such tasks found" });
+      return;
+    }
+    if (result.length > 10 && !pageNum) {
+      res.status(200).json(result.slice(0, 10));
+      return;
+    }
+    res.status(200).json(result.slice(10 * pageNum - 10, 10 * pageNum));
+  });
+};
+
+const updateFieldInProjects = (req, res) => {
+  let id = req.params.id;
+  let field = createRequestFilters(req.query);
+  updateField(field, id, (err) => {
+    if (err) {
+      res.status(500).json({ message: `Error updating project id ${id}` });
+      console.log(`Error updating project id ${id}`, err.message);
+      return;
+    }
+    res.status(200).json({ message: `Project ${id} successfully updated` });
+  });
+};
+
+const insertNewComment = (req, res) => {
+  const body = req.body;
+  if (!body["Project_id"] || body["content"] == "") {
+    res.status(404).json({ message: "Invalid project_id Name" });
+    return;
+  }
+
+  insertComment(req.body, (err) => {
+    if (err) {
+      res.status(500).json({ message: "Error inserting comment" });
+      console.log("Error inserting comment", err.message);
+      return;
+    }
+    res.status(200).json({ message: "comment successfully added" });
+  });
+};
+
+const updateCommentById = (req, res) => {
+  let id = req.params.id;
+  upDateComments(id, req.body, (err) => {
+    if (err) {
+      res.status(500).json({ message: `Error updating comment id ${id}` });
+      console.log(`Error updating comment id ${id}`, err.message);
+      return;
+    }
+    res.status(200).json({ message: `Comment ${id} successfully updated` });
+  });
+};
+
+module.exports = {
+  insertNewtask,
+  insertNewProject,
+  getAllProjects,
+  getAllTasks,
+  deleteProjectOrTaskOrCommentById,
+  upDateProject,
+  updateTask,
+  findProjectOrTaskOrCommentById,
+  getTasksByFilters,
+  updateFieldInProjects,
+  getAllComments,
+  insertNewComment,
+  updateCommentById,
 };
