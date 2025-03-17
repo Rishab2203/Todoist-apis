@@ -6,7 +6,6 @@ const {
   deleteById,
   getAll,
   findById,
-  projectIdByName,
   findByFilters,
   updateField,
   insertComment,
@@ -34,8 +33,6 @@ const insertNewProject = (req, res) => {
 
 const insertNewtask = async (req, res) => {
   const body = req.body;
-  const projectId = await projectIdByName(body.project_name);
-  body.project_id = projectId;
 
   if (!body["content"] || body["content"] == "" || !body["project_id"]) {
     res.status(404).json({ message: "Invalid details" });
@@ -52,15 +49,15 @@ const insertNewtask = async (req, res) => {
   });
 };
 
-const getAllProjects = (req, offset, res) => {
-  let offset = req.queries.page ? (req.query.page - 1) * 10 : 0;
+const getAllProjects = (req, res) => {
+  let offset = req.query.page ? (req.query.page - 1) * 10 : 0;
   getAll("projects", offset, (err, result) => {
     if (err) {
       res.status(400).json({ message: `Error fetching projects` });
       console.log(`error fetchiing projects`, err.message);
       return;
     }
-    if (!result) {
+    if (result.length === 0) {
       res.status(200).json({ message: "No Projects in Database" });
       return;
     }
@@ -69,14 +66,14 @@ const getAllProjects = (req, offset, res) => {
 };
 
 const getAllTasks = (req, res) => {
-  let offset = req.queries.page ? (req.query.page - 1) * 10 : 0;
+  let offset = req.query.page ? (req.query.page - 1) * 10 : 0;
   getAll("tasks", offset, (err, result) => {
     if (err) {
       res.status(400).json({ message: `Error fetching tasks` });
       console.log(`error fetchiing tasks `, err.message);
       return;
     }
-    if (!result) {
+    if (result.length === 0) {
       res.status(200).json({ message: "No Tasks in Database" });
       return;
     }
@@ -85,14 +82,14 @@ const getAllTasks = (req, res) => {
 };
 
 const getAllComments = (req, res) => {
-  let offset = req.queries.page ? (req.query.page - 1) * 10 : 0;
+  let offset = req.query.page ? (req.query.page - 1) * 10 : 0;
   getAll("comments", offset, (err, result) => {
     if (err) {
       res.status(400).json({ message: `Error fetching comments` });
       console.log(`error fetchiing comments `, err.message);
       return;
     }
-    if (!result) {
+    if (result.length === 0) {
       res.status(200).json({ message: "No comments in Database" });
       return;
     }
@@ -160,29 +157,25 @@ const findProjectOrTaskOrCommentById = (req, res) => {
 
 const getTasksByFilters = (req, res) => {
   let queries = req.query;
-  let pageNum = req.query.page ? req.query.page : 1;
+  let offset = req.query.page ? (req.query.page - 1) * 10 : 0;
   let filters = createRequestFilters(queries);
-  findByFilters(filters, (err, result) => {
+  findByFilters(filters, offset, (err, result) => {
     if (err) {
       res.status(500).json({ message: "Error finidng tasks" });
       console.log("error getting tasks by filters", err.message);
       return;
     }
-    if (!result) {
+    if (result.length === 0) {
       res.status(200).json({ message: "No such tasks found" });
       return;
     }
-    if (result.length > 10 && !pageNum) {
-      res.status(200).json(result.slice(0, 10));
-      return;
-    }
-    res.status(200).json(result.slice(10 * pageNum - 10, 10 * pageNum));
+    res.status(200).json(result);
   });
 };
 
 const updateFieldInProjects = (req, res) => {
   let id = req.params.id;
-  let field = createRequestFilters(req.query);
+  let field = createRequestFilters(req.body);
   updateField(field, id, (err) => {
     if (err) {
       res.status(500).json({ message: `Error updating project id ${id}` });
@@ -195,7 +188,7 @@ const updateFieldInProjects = (req, res) => {
 
 const insertNewComment = (req, res) => {
   const body = req.body;
-  if (!body["Project_id"] || body["content"] == "") {
+  if (!body["project_id"] || body["content"] == "") {
     res.status(404).json({ message: "Invalid project_id Name" });
     return;
   }

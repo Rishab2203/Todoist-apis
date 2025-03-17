@@ -63,7 +63,7 @@ function insertTasks(start, projects, tasksPerProject) {
               i,
               randomDates.currentDate,
               completed,
-              randomDates.duedate,
+              randomDates.dueDate,
             ],
             (err) => {
               if (err) {
@@ -129,10 +129,10 @@ async function insertTasksInChunks(toalProjects, tasksPerProject, chunkSize) {
   }
 }
 
-insertProjectsInChunks(1000000, 10000)
+insertProjectsInChunks(1000000, 20000)
   .then(() => {
     console.log("all projects added");
-    return insertTasksInChunks(1000000, 10, 10000);
+    return insertTasksInChunks(1000000, 10, 20000);
   })
   .then(() => console.log("all tasks added"))
   .catch((err) => {

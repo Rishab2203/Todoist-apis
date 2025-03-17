@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-const projectRouter = require("./app/rotutes/projects.js");
-const taskRouter = require("./app/rotutes/tasks.js");
-const commentsRouter = require("./app/rotutes/comments.js");
+const projectRouter = require("./app/routes/projects.js");
+const taskRouter = require("./app/routes/tasks.js");
+const commentsRouter = require("./app/routes/comments.js");
 const app = express();
 
 const PORT = 5500;
