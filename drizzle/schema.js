@@ -4,13 +4,18 @@ const {
   sqliteTable,
   text,
   integer,
+  index,
 } = require("drizzle-orm/sqlite-core");
 
-const usersTable = sqliteTable("users_table", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-});
+const usersTable = sqliteTable(
+  "users_table",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+  },
+  (table) => [{ usrIdx: index("use_idx").on(table.id) }]
+);
 
 const projectsTable = sqliteTable(
   "projects",
