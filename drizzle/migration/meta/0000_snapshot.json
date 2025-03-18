@@ -1,0 +1,267 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "275a39ef-4d77-4af3-9efe-c3e1ab62f035",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "users_table": {
+      "name": "users_table",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "users_table_email_unique": {
+          "name": "users_table_email_unique",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "projects": {
+      "name": "projects",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "project_name": {
+          "name": "project_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "is_favourite": {
+          "name": "is_favourite",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "projects_user_id_users_table_id_fk": {
+          "name": "projects_user_id_users_table_id_fk",
+          "tableFrom": "projects",
+          "tableTo": "users_table",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "is_favourite_check": {
+          "name": "is_favourite_check",
+          "value": "\"projects\".\"is_favourite\" In  (0,1)"
+        }
+      }
+    },
+    "comments": {
+      "name": "comments",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "posted_at": {
+          "name": "posted_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(CURRENT_DATE)"
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "task_id": {
+          "name": "task_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "comments_project_id_projects_id_fk": {
+          "name": "comments_project_id_projects_id_fk",
+          "tableFrom": "comments",
+          "tableTo": "projects",
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "comments_task_id_tasks_id_fk": {
+          "name": "comments_task_id_tasks_id_fk",
+          "tableFrom": "comments",
+          "tableTo": "tasks",
+          "columnsFrom": [
+            "task_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "tasks": {
+      "name": "tasks",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "completed": {
+          "name": "completed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "tasks_project_id_projects_id_fk": {
+          "name": "tasks_project_id_projects_id_fk",
+          "tableFrom": "tasks",
+          "tableTo": "projects",
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "completed_check": {
+          "name": "completed_check",
+          "value": "\"tasks\".\"completed\" In (0,1)"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
