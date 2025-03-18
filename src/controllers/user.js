@@ -34,22 +34,5 @@ const deleteUserById = async (req, res) => {
 
 module.exports = {
   insertNewUser,
-  insertNewtask,
-  insertNewProject,
-  getAllProjects,
-  getAllTasks,
-  deleteProjectById,
-  deleteCommentById,
-  deleteTaskById,
   deleteUserById,
-  upDateProject,
-  updateTask,
-  findProjectById,
-  findTaskById,
-  findCommentById,
-  getTasksByFilters,
-  updateFieldInProjects,
-  getAllComments,
-  insertNewComment,
-  updateCommentById,
 };
