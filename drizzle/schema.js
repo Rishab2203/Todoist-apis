@@ -13,8 +13,9 @@ const usersTable = sqliteTable(
     id: integer("id").primaryKey({ autoIncrement: true }),
     name: text("name").notNull(),
     email: text("email").notNull().unique(),
+    deleted_at: integer("deleted_at").default(null),
   },
-  (table) => [{ usrIdx: index("use_idx").on(table.id) }]
+  (table) => [{ usrIdx: index("usr_idx").on(table.id) }]
 );
 
 const projectsTable = sqliteTable(
@@ -26,7 +27,7 @@ const projectsTable = sqliteTable(
     is_favourite: integer("is_favourite").default(0),
     user_id: integer("user_id")
       .notNull()
-      .references(() => usersTable.id, { onDelete: "cascade" }),
+      .references(() => usersTable.id),
   },
   (table) => [check("is_favourite_check", sql`${table.is_favourite} In  (0,1)`)]
 );
@@ -40,7 +41,7 @@ const tasksTable = sqliteTable(
     created_at: text("created_at").default(sql`(CURRENT_DATE)`),
     project_id: integer("project_id")
       .notNull()
-      .references(() => projectsTable.id, { onDelete: "cascade" }),
+      .references(() => projectsTable.id),
     completed: integer("completed").default(0),
     due_date: text("created_at"),
   },
@@ -53,10 +54,10 @@ const commentsTable = sqliteTable("comments", {
   posted_at: text("posted_at").default(sql`(CURRENT_DATE)`),
   project_id: integer("project_id")
     .notNull()
-    .references(() => projectsTable.id, { onDelete: "cascade" }),
+    .references(() => projectsTable.id),
   task_id: integer("task_id")
     .notNull()
-    .references(() => tasksTable.id, { onDelete: "cascade" }),
+    .references(() => tasksTable.id),
 });
 
 module.exports = { usersTable, projectsTable, commentsTable, tasksTable };

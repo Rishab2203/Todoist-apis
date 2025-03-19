@@ -1,5 +1,6 @@
 const { deleteById, insertUser } = require("../models/model.js");
 const { usersTable } = require("../../drizzle/schema.js");
+const db = require("../db-config/db.js");
 
 const insertNewUser = async (req, res) => {
   const body = req.body;
@@ -20,6 +21,7 @@ const insertNewUser = async (req, res) => {
 
 const deleteUserById = async (req, res) => {
   let id = parseInt(req.params.id);
+
   try {
     const result = await deleteById(usersTable, id);
     res.status(200).json({ message: "successfully deleted." });
@@ -29,6 +31,17 @@ const deleteUserById = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "Error deleting" });
     console.log("error deleting : ", err.message);
+  }
+};
+
+const markuserDelete = async (userId) => {
+  try {
+    await db
+      .update(usersTable)
+      .set({ deleted_at: Date.now() })
+      .where(eq(usersTable.id, userId));
+  } catch (err) {
+    console.error("Error soft deleting error", err.message);
   }
 };
 

@@ -1,7 +1,8 @@
 CREATE TABLE `users_table` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,
-	`email` text NOT NULL
+	`email` text NOT NULL,
+	`deleted_at` integer DEFAULT 'null'
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `users_table_email_unique` ON `users_table` (`email`);--> statement-breakpoint
@@ -11,7 +12,7 @@ CREATE TABLE `projects` (
 	`color` text,
 	`is_favourite` integer DEFAULT 0,
 	`user_id` integer NOT NULL,
-	FOREIGN KEY (`user_id`) REFERENCES `users_table`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`user_id`) REFERENCES `users_table`(`id`) ON UPDATE no action ON DELETE no action,
 	CONSTRAINT "is_favourite_check" CHECK("projects"."is_favourite" In  (0,1))
 );
 --> statement-breakpoint
@@ -21,8 +22,8 @@ CREATE TABLE `comments` (
 	`posted_at` text DEFAULT (CURRENT_DATE),
 	`project_id` integer NOT NULL,
 	`task_id` integer NOT NULL,
-	FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`task_id`) REFERENCES `tasks`(`id`) ON UPDATE no action ON DELETE cascade
+	FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`task_id`) REFERENCES `tasks`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `tasks` (
@@ -32,6 +33,6 @@ CREATE TABLE `tasks` (
 	`created_at` text,
 	`project_id` integer NOT NULL,
 	`completed` integer DEFAULT 0,
-	FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON UPDATE no action ON DELETE no action,
 	CONSTRAINT "completed_check" CHECK("tasks"."completed" In (0,1))
 );

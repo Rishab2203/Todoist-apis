@@ -49,14 +49,4 @@ function getRandomDates() {
   };
 }
 
-function createRequestFilters(obj) {
-  const result = [];
-  for (let para in obj) {
-    if (para != "page") {
-      result.push(`${para} = ${obj[para]}`);
-    }
-  }
-  return result.join(" AND ");
-}
-
-module.exports = { getRandomColorName, getRandomDates, createRequestFilters };
+module.exports = { getRandomColorName, getRandomDates };
