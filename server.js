@@ -25,7 +25,8 @@ app.get("/", (req, res) => {
 ///////////////routes//////////////////
 
 app.use("/login", loginRouter);
-app.use("/projects", verifyToken, projectRouter);
+app.use(verifyToken);
+app.use("/projects", projectRouter);
 app.use("/tasks", taskRouter);
 app.use("/comments", commentsRouter);
 app.use("/users", userRouter);
